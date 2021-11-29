@@ -1,2 +1,3 @@
 Hello, world.
 Hi, again.
+Greetings from the Astro server!
