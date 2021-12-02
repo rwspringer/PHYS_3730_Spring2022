@@ -82,6 +82,37 @@ sol = optimize.minimize(chi2ish,bgguess,args=args,method='Nelder-Mead')
 bgwild = sol.x
 print('b,g fit:',sol.x)
 df['dmod'] = dcasesmodel(df.dday.to_numpy(),0,N,*bgwild)
+Rtot = np.sum(df.dmod)
+print(Rtot)
+
+bgguess = bgwild
+t0delta,tfbeg,tfend = 320,320,df.index[-1] 
+Ndelta = 0.5*N-Rtot
+args=(df.dday,df.dcases,t0delta,tfbeg,tfend,Ndelta)
+sol = optimize.minimize(chi2ish,bgguess,args=args,method='Nelder-Mead')        
+bgdelta = sol.x
+print('b,g fit:',sol.x)
+df['dmod'] += dcasesmodel(df.dday.to_numpy(),t0delta,Ndelta,*bgdelta)
+
+savethedate = df.index[-1]
+xdays = 200
+datex = pd.date_range(start=df['date'].iloc[0], freq="1d",periods=len(df.index)+xdays)
+df = df.reindex(np.arange(len(datex)))
+df['date'] = datex
+df['dday'] = df['date'].to_numpy().astype(np.datetime64)
+df['dday'] = (df.dday-df.dday[0]).astype('timedelta64[D]').astype(float)
+
+df.dmod = dcasesmodel(df.dday.to_numpy(),t0wild,N,*bgwild)
+df.dmod += dcasesmodel(df.dday.to_numpy(),t0delta,Ndelta,*bgdelta)
+
+bgguess = bgdelta
+t0om,tfbeg,tfend = savethedate-60,savethedate,df.index[-1] 
+Nom = N
+args=(df.dday,df.dcases,t0delta,tfbeg,tfend,Nom)
+sol = optimize.minimize(chi2ish,bgguess,args=args,method='Nelder-Mead')        
+bgom = sol.x
+print('om b,g fit:',sol.x)
+df['dmod'] += dcasesmodel(df.dday.to_numpy(),t0om,Nom,*bgom)
 
 
 # show the world...
@@ -93,7 +124,7 @@ ax.set_title(state+' case counts')
 ax.figure.savefig('tmp.png')
 
 # comment this out!?
-if 1:
+if 0:
     import os
     os.system('convert tmp.png ~/www/tmp.jpg')
 
