@@ -105,13 +105,11 @@ df['dday'] = (df.dday-df.dday[0]).astype('timedelta64[D]').astype(float)
 df.dmod = dcasesmodel(df.dday.to_numpy(),t0wild,N,*bgwild)
 df.dmod += dcasesmodel(df.dday.to_numpy(),t0delta,Ndelta,*bgdelta)
 
-bgguess = bgdelta
-t0om,tfbeg,tfend = savethedate-60,savethedate,df.index[-1] 
+
+bgom = bgdelta*1.2
+t0om = 520
 Nom = N
-args=(df.dday,df.dcases,t0delta,tfbeg,tfend,Nom)
-sol = optimize.minimize(chi2ish,bgguess,args=args,method='Nelder-Mead')        
-bgom = sol.x
-print('om b,g fit:',sol.x)
+print(df.date[t0om])
 df['dmod'] += dcasesmodel(df.dday.to_numpy(),t0om,Nom,*bgom)
 
 
@@ -124,7 +122,7 @@ ax.set_title(state+' case counts')
 ax.figure.savefig('tmp.png')
 
 # comment this out!?
-if 0:
+if 1:
     import os
     os.system('convert tmp.png ~/www/tmp.jpg')
 
